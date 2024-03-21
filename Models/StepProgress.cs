@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace manhour_services.Models
+namespace ManpowerControl.Models
 {
     public class StepProgress
     {
@@ -15,6 +15,9 @@ namespace manhour_services.Models
         public long ID { get; set; }
         [Required]
         public string? ActivityID { get; set; }
+
+        [Required]
+        public int Order { get; set; } 
         [Required]
         public int Year { get; set; }
         [Required]

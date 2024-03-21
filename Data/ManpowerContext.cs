@@ -1,5 +1,5 @@
-﻿using manhour_services.Models;
-using manhour_services.Modules;
+﻿using ManpowerControl.Models;
+using ManpowerControl.Modules;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -7,14 +7,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace manhour_services.Data
+namespace ManpowerControl.Data
 {
     public class ManpowerContext : DbContext
 
     {
-        public DbSet<ActivityName> ActivityNames { get; set; } = null!;
-        public DbSet<MhSaving> MhSavings { get; set; } = null!;
-        public DbSet<StepProgress> StepProgresses { get; set; } = null!;
+        // public DbSet<RelationalActivity> RelationalActivity { get; set; } = null!;
+        public DbSet<Activity> Activity { get; set; } = null!;
+        public DbSet<MhSaving> MhSaving { get; set; } = null!;
+        public DbSet<StepProgress> StepProgress { get; set; } = null!; 
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

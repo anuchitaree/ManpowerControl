@@ -6,15 +6,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace manhour_services.Models
+namespace ManpowerControl.Models
 {
     public class MhSaving
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Key,Column(Order =0)]
         public long ID { get; set; }
+
         [Required, Column(Order = 1)]
         public string? ActivityID { get; set; }
+        [Required]
+        public int Order { get; set; } 
+        
         [Required]
         public int Year { get; set; }
         [Required]

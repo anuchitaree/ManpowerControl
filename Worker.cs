@@ -1,6 +1,6 @@
-using manhour_services.Data;
-using manhour_services.Models;
-using manhour_services.Modules;
+using System;
+using ManpowerControl.Data;
+using ManpowerControl.Modules;
 using ManpowerControl.Models;
 using Microsoft.Extensions.Configuration;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Query.ExpressionTranslators.Internal;
@@ -8,6 +8,8 @@ using OfficeOpenXml;
 using System.Linq;
 using System.Text.Json;
 using System.Xml;
+using System.Data.Common;
+using Microsoft.EntityFrameworkCore;
 
 namespace ManpowerControl
 {
@@ -38,7 +40,7 @@ namespace ManpowerControl
                 var path = @"d:\project\excel-python\DNKI_Dec'23.xlsx";
 
                 var filename = Filename(path);
-                var factoryActivities = new List<Activity>();
+                var listGroupActivity = new List<GroupActivity>();
 
                 var package = new ExcelPackage(path);
 
@@ -48,18 +50,23 @@ namespace ManpowerControl
                     // no work sheet
                 }
 
+                var filedate = new Filedate();
 
-
-                for (int r = 49; r < 52; r += 2)
+                for (int r = 49; r < 5000; r += 2)
                 {
-                    var factoryActivity = new Activity();
-                    factoryActivity.FactoryID = filename.FactoryID;
-                    factoryActivity.UpdateYear = filename.Year;
-                    factoryActivity.UpdateMonth = filename.Month;
+                    var groupActivity = new GroupActivity();
+                    filedate.FactoryID = filename.FactoryID;
+                    filedate.UpdateYear = filename.Year;
+                    filedate.UpdateMonth = filename.Month;
 
                     var activityID = Guid.NewGuid().ToString();
 
-                    var activityName = new ActivityName();
+                    var activity = new Activity();
+                    activity.ActivityID = activityID;
+                    activity.FactoryID = filename.FactoryID;
+                    activity.UpdateYear = filename.Year;
+                    activity.UpdateMonth = filename.Month;
+
                     var activityDetail = worksheet?.Cells[r, 3].Value;
                     if (activityDetail == null)
                     {
@@ -67,37 +74,36 @@ namespace ManpowerControl
                     }
                     else
                     {
-                        activityName.ActivityDetail = worksheet?.Cells[r, 3].Value.ToString();
+                        activity.ActivityDetail = worksheet?.Cells[r, 3].Value.ToString();
                     }
-                    activityName.FactoryID = factoryActivity.FactoryID;
+                    // activity.FactoryID = factoryActivity.FactoryID;
                     var linename = worksheet?.Cells[r, 4].Value;
-                    activityName.LineName = linename == null ? "" : worksheet?.Cells[r, 4].Value.ToString();
+                    activity.LineName = linename == null ? "" : worksheet?.Cells[r, 4].Value.ToString();
 
                     var productModel = worksheet?.Cells[r, 5].Value;
-                    activityName.ProductModel = productModel == null ? "" : worksheet?.Cells[r, 5].Value.ToString();
+                    activity.ProductModel = productModel == null ? "" : worksheet?.Cells[r, 5].Value.ToString();
 
                     var pic = worksheet?.Cells[r, 6].Value;
-                    activityName.Pic = pic == null ? "" : worksheet?.Cells[r, 6].Value.ToString();
+                    activity.Pic = pic == null ? "" : worksheet?.Cells[r, 6].Value.ToString();
 
                     var automationCategory = worksheet?.Cells[r, 7].Value;
-                    activityName.AutomationCategory = automationCategory == null ? "" : worksheet?.Cells[r, 7].Value.ToString();
+                    activity.AutomationCategory = automationCategory == null ? "" : worksheet?.Cells[r, 7].Value.ToString();
 
                     var feasibility = worksheet?.Cells[r, 8].Value;
-                    activityName.Feasibility = feasibility == null ? "" : worksheet?.Cells[r, 8].Value.ToString();
+                    activity.Feasibility = feasibility == null ? "" : worksheet?.Cells[r, 8].Value.ToString();
 
                     var status = worksheet?.Cells[r, 9].Value;
-                    activityName.Status = status == null ? "" : worksheet?.Cells[r, 9].Value.ToString();
+                    activity.Status = status == null ? "" : worksheet?.Cells[r, 9].Value.ToString();
 
                     var categoryReasonIssue = worksheet?.Cells[r, 10].Value;
-                    activityName.CategoryReasonIssue = categoryReasonIssue == null ? "" : worksheet?.Cells[r, 10].Value.ToString();
+                    activity.CategoryReasonIssue = categoryReasonIssue == null ? "" : worksheet?.Cells[r, 10].Value.ToString();
 
                     var category = worksheet?.Cells[r, 11].Value;
-                    activityName.Category = category == null ? "" : worksheet?.Cells[r, 11].Value.ToString();
+                    activity.Category = category == null ? "" : worksheet?.Cells[r, 11].Value.ToString();
 
                     var subCategoryDetail = worksheet?.Cells[r, 12].Value;
-                    activityName.SubCategoryDetail = subCategoryDetail == null ? "" : worksheet?.Cells[r, 12].Value.ToString();
+                    activity.SubCategoryDetail = subCategoryDetail == null ? "" : worksheet?.Cells[r, 12].Value.ToString();
 
-                    activityName.ActivityID = activityID;
 
 
                     var mhSaving = new List<MhSaving>();
@@ -111,6 +117,7 @@ namespace ManpowerControl
                         mhSaving.Add(new MhSaving
                         {
                             ActivityID = activityID,
+                            Order = c,
                             Month = month[c],
                             Year = filename.Year,
                             MhSavingPlan = plan,
@@ -129,40 +136,125 @@ namespace ManpowerControl
                         stepProgresses.Add(new StepProgress
                         {
                             ActivityID = activityID,
+                            Order = c,
                             Month = month[c],
                             Year = filename.Year,
                             StepProgressPlan = plan,
                             StepProgressActual = actual,
                         }); ;
                     }
-                    factoryActivity.ActivityName = activityName;
-                    factoryActivity.MhSavings = mhSaving;
-                    factoryActivity.StepProgresses = stepProgresses;
+                    groupActivity.Activity = activity;
+                    groupActivity.MhSaving = mhSaving;
+                    groupActivity.StepProgresses = stepProgresses;
 
-                    factoryActivities.Add(factoryActivity);
+                    listGroupActivity.Add(groupActivity);
+                }
+
+                var _activity = new List<Activity>();
+                var _mhSaving = new List<MhSaving>();
+                var _stepProgress = new List<StepProgress>();
+                foreach (var act in listGroupActivity)
+                {
+                    if (act.Activity != null)
+                    {
+                        _activity.Add(act.Activity);
+                    }
+                    if (act.MhSaving?.Count() > 0)
+                    {
+                        _mhSaving.AddRange(act.MhSaving);
+                    }
+                    if (act.StepProgresses?.Count() > 0)
+                    {
+                        _stepProgress.AddRange(act.StepProgresses);
+                    }
+
+                }
+
+
+                using (var db = new ManpowerContext())
+                {
+                    if (db.Database.CanConnect())
+                    {
+                        _logger.LogInformation("The database is connected.");
+                    }
+
+
+                    var olddata = db.Activity
+                    .Where(x => x.UpdateYear == filedate.UpdateYear && x.UpdateMonth == filedate.UpdateMonth && x.FactoryID == filedate.FactoryID).ToList();
+                    if (olddata.Count() > 0)
+                    {
+                        db.Activity.RemoveRange(olddata);
+                        db.SaveChanges();
+                    }
+
+                    await InsertActivity(_activity);
+                    await InsertMhSaving(_mhSaving);
+                    await InsertStepProgress(_stepProgress);
+
 
 
 
 
 
                 }
-                Console.WriteLine(JsonSerializer.Serialize(factoryActivities));
+                //  new List<GroupActivity>();
+                // Console.WriteLine(JsonSerializer.Serialize(_activity));
+                Console.WriteLine("------Completed--------");
+                // Console.WriteLine(JsonSerializer.Serialize(_mhSaving));
+                // Console.WriteLine();
 
-                //using(var db = new ManpowerContext())
-                //{
-                //    if (db.Database.CanConnect())
-                //    {
-                //        _logger.LogInformation("The database is connected.");
-                //    }
-
-                //    db.ActivityNames.AddRange(activityName);
-
-                //}
-
-                await Task.Delay(10000, stoppingToken);
+                await Task.Delay(100000, stoppingToken);
             }
         }
 
+        private async Task<bool> InsertActivity(List<Activity> data)
+        {
+            try
+            {
+                using (var db = new ManpowerContext())
+                {
+                    await db.Activity.AddRangeAsync(data);
+                    await db.SaveChangesAsync();
+                }
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        private async Task<bool> InsertMhSaving(List<MhSaving> data)
+        {
+            try
+            {
+                using (var db = new ManpowerContext())
+                {
+                    await db.MhSaving.AddRangeAsync(data);
+                    await db.SaveChangesAsync();
+                }
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        private async Task<bool> InsertStepProgress(List<StepProgress> data)
+        {
+            try
+            {
+                using (var db = new ManpowerContext())
+                {
+                    await db.StepProgress.AddRangeAsync(data);
+                    await db.SaveChangesAsync();
+                }
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
 
         private WorkSheetName Filename(string filename)
         {

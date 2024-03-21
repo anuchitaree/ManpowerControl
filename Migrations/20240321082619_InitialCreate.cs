@@ -10,9 +10,13 @@ namespace ManpowerControl.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "ActivityNames",
+                name: "Activity",
                 columns: table => new
                 {
+                    ID = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UpdateYear = table.Column<int>(type: "integer", nullable: false),
+                    UpdateMonth = table.Column<int>(type: "integer", nullable: false),
                     ActivityID = table.Column<string>(type: "text", nullable: false),
                     FactoryID = table.Column<string>(type: "text", nullable: false),
                     ActivityDetail = table.Column<string>(type: "text", nullable: false),
@@ -28,16 +32,17 @@ namespace ManpowerControl.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ActivityNames", x => x.ActivityID);
+                    table.PrimaryKey("PK_Activity", x => x.ID);
                 });
 
             migrationBuilder.CreateTable(
-                name: "MhSavings",
+                name: "MhSaving",
                 columns: table => new
                 {
                     ID = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     ActivityID = table.Column<string>(type: "text", nullable: false),
+                    Order = table.Column<int>(type: "integer", nullable: false),
                     Year = table.Column<int>(type: "integer", nullable: false),
                     Month = table.Column<int>(type: "integer", nullable: false),
                     MhSavingPlan = table.Column<double>(type: "double precision", nullable: false),
@@ -45,16 +50,17 @@ namespace ManpowerControl.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_MhSavings", x => x.ID);
+                    table.PrimaryKey("PK_MhSaving", x => x.ID);
                 });
 
             migrationBuilder.CreateTable(
-                name: "StepProgresses",
+                name: "StepProgress",
                 columns: table => new
                 {
                     ID = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     ActivityID = table.Column<string>(type: "text", nullable: false),
+                    Order = table.Column<int>(type: "integer", nullable: false),
                     Year = table.Column<int>(type: "integer", nullable: false),
                     Month = table.Column<int>(type: "integer", nullable: false),
                     StepProgressPlan = table.Column<int>(type: "integer", nullable: false),
@@ -62,20 +68,20 @@ namespace ManpowerControl.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_StepProgresses", x => x.ID);
+                    table.PrimaryKey("PK_StepProgress", x => x.ID);
                 });
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "ActivityNames");
+                name: "Activity");
 
             migrationBuilder.DropTable(
-                name: "MhSavings");
+                name: "MhSaving");
 
             migrationBuilder.DropTable(
-                name: "StepProgresses");
+                name: "StepProgress");
         }
     }
 }
